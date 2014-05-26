@@ -9,7 +9,7 @@ import string
 import copy
 from fsa  import * # written by JG
 
-from fsm import State, Transducer, get_graph
+#from fsm import State, Transducer, get_graph
 from collections import defaultdict
 
  
