@@ -7,6 +7,7 @@ import os
 import codecs # for utf8
 import string
 import copy
+import networkx
 from fsa  import * # written by JG
 
 #from fsm import State, Transducer, get_graph
@@ -835,7 +836,7 @@ def Sig1ExtendsSig2(sig1, sig2,outfile): #for suffix signatures
 		return (None, None,None)
 	length = len(list1)
 	ThisExtendsThat=dict()
-	for suffixno1 in range(length):
+	for suffixno1 in range(length):  #we make an array of what suffix might possibly extend what suffix
 		suffix1 = list1[suffixno1]
 		ThisExtendsThat[suffixno1]=dict()
 		for suffixno2 in range(length): 
@@ -848,9 +849,9 @@ def Sig1ExtendsSig2(sig1, sig2,outfile): #for suffix signatures
 				ThisExtendsThat[suffixno1][suffixno2]=1
 			else:
 				ThisExtendsThat[suffixno1][suffixno2]=0
- 	for pos in range(length):
+ 	for pos in range(length):					#now we try to find a good alignment
 		thisrowcount = sum(ThisExtendsThat[pos].values()) 
-		if thisrowcount == 1:
+		if thisrowcount == 1:					# this means only one alignment is permitted, so this is helpful to know.
 			for pos2 in range(length):
 				if ThisExtendsThat[pos][pos2] == 1:
 					that_pos = pos2
@@ -861,7 +862,9 @@ def Sig1ExtendsSig2(sig1, sig2,outfile): #for suffix signatures
 	
 	 
 	# at this point, if any row is empty, then alignment is impossible. If any row has two 1's, then alignment is still ambiguous, but this is very unlikely. 
+
 	
+
 	AlignPossibleFlag = True
 	AlignedList1 = list()
 	AlignedList2 = list()
@@ -887,7 +890,10 @@ def Sig1ExtendsSig2(sig1, sig2,outfile): #for suffix signatures
 						Differences.append(list1[pos][:lengthofdifference] )
 
 	if AlignPossibleFlag==True:
-		return (AlignedList1, AlignedList2,Differences)
+		if len(Differences) == len(list1):
+			return (AlignedList1, AlignedList2,Differences)
+		else:
+			return (None, None, None)
 	else:
 		return (None, None,None)
 		
@@ -1573,16 +1579,18 @@ def MakeSignatures_1(StemToWord, StemToSig, FindSuffixesFlag, fsa,outfile,  NoLe
 			if sig1 == sig2: continue
 			list1, list2, differences = Sig1ExtendsSig2(sig1, sig2,outfile)		
 			Differences.append((sig1, sig2, list1, list2,differences))
+			 
 	Differences.sort(key = lambda entry:entry[4] )
+	width = 25
 	for item in Differences:
-	
-		print >>outfile, list_to_string(Differences[0]),  \
-				 list_to_string(Differences[1]) #,   \
-				# list_to_string(Differences[2]),  \
-				# list_to_string(Differences[3]), \
-				# list_to_string(Differences[4]),
-	
-	
+		if item[3] != None:
+			sig1string = list_to_string(item[2])
+			sig2string = list_to_string(item[3])		
+			print >>outfile, item[0], " "*(width-len(item[0])),\
+				item[1], " "*(width-len(item[1])),\
+				sig1string, " "*(width-len(sig1string)),\
+				sig2string, " "*(width-len(sig2string)),\
+				item[4], " "*(width-len(item[4]))
 
 	for sig, stemlist in SortedListOfSignatures:
 		affixlist = list(sig.split('-'))
