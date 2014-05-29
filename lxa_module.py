@@ -101,7 +101,10 @@ def findSignatureInformationContent (signatures, signature, bitsPerLetter):
 	for affix in affixList:
 		affixlength = len(affix)
 		affixPhonoInformation += bitsPerLetter * len(affix)
-		affixOrderingInformation += math.log ( affixlength * (affixlength -1)/2,2)
+		if affixlength > 1:
+			affixOrderingInformation += math.log ( affixlength * (affixlength -1)/2,2)
+		else:
+			affixOrderingInformation = 0
 	phonoInformation = int(stemSetPhonoInformation + affixPhonoInformation)
 	orderingInformation = int(stemSetOrderingInformation + affixOrderingInformation)
 	return (phonoInformation, orderingInformation)
