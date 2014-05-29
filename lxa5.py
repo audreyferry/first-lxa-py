@@ -230,7 +230,7 @@ morphology.printFSA(FSA_outfile)
 
  
 #-------------- Added Sept 24 for Jackson's program -----------------------------#
-if False:
+if True:
 	printSignatures(Signatures, WordToSig, StemCounts, Signatures_outfile, g_encoding, FindSuffixesFlag)
 
  
