@@ -1,7 +1,6 @@
 # -*- coding: <utf-16> -*- 
 unicode = True
 import codecs
-import pygraphviz as pgv
 
 
 
@@ -38,7 +37,7 @@ short_filename 		= "browncorpus"
 out_short_filename 	= "browncorpus"
 language		= "english"
 
-datafolder    		= "../../data/" 
+datafolder    		= "../../data/"        # '../data/'     #"../../data/" 
 ngramfolder   		= datafolder + language + "/ngrams/"
 outfolder     		= datafolder + language + "/lxa/"
 infolder 		= datafolder + language + '/dx1_files/'	
@@ -213,6 +212,7 @@ print "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
 splitEndState = True
 morphology= FSA_lxa(splitEndState)
+#print "Value of morphology.splitEndState :", morphology.splitEndState
 
 #---------------------------------------------------------------------------------#	
 #	1b. Find signatures, and put them in the FSA also.
@@ -220,6 +220,17 @@ morphology= FSA_lxa(splitEndState)
 
 StemToWord, Signatures, WordToSig, StemToSig =  MakeSignatures_1(StemToWord, StemToSig, FindSuffixesFlag, morphology, Signatures_outfile, ) 
 
+# Investigation showed that "End" was the only accepting state
+indicesToCheck = set()
+indicesToCheck = {1, 2, 3, 4, 20, 21, 30}
+for state in morphology.States:
+	if state.index in indicesToCheck:
+		print "state", state.index, "\tacceptingStateFlag: ", state.acceptingStateFlag
+		
+		#NOTE. At this point (i.e, directly after MakeSignatures_1)  States[k].index == k,  
+		#      but not further on (after merges)
+print
+	
 #---------------------------------------------------------------------------------#	
 #	1c. Print the FSA to file.
 #---------------------------------------------------------------------------------#  
@@ -305,7 +316,8 @@ print "Local current time :", localtime1
 morphology.dictOfLists_parses = morphology.parseWords(wordlist)
 
 localtime2 = time.asctime( time.localtime(time.time()) )
-#print "Time to parse all words: ", localtime2 - localtime1
+#print "Time to parse all words: ", localtime2 - localtime1  #subtraction doesn't work for strings!
+print "Local time after parse :", localtime2
 
 
 #------------------------------------------------------------------------------------------#
@@ -376,18 +388,41 @@ for loop in range(HowManyTimesToCollapseEdges):
 #------------------------------------------------------------------------------------------#
 
 morphology_copy = morphology.MakeCopy()
-
+print
+print "Saving morphology FSA information to files for standalone access..."
+morphology.saveFSA()    #audrey  2014_09_06
 
 initialParseChain = list()
 CompletedParses = list()
 IncompleteParses = list()
 word = "" 
 while True:
+	print
 	word = raw_input('Inquiry about a word: ')
 	if word == "exit":
 		break
-	if word == "State":
+	elif word == "State":
 		while True:
+			stateidx = raw_input("State index:")
+			if stateidx == "" or stateidx == "exit":
+				break
+			stateidx = int(stateidx)	
+			for state in morphology.States:      
+				if state.index == stateidx:  
+					break	
+			#####state = morphology.States[stateidx]   
+			for edge in state.getOutgoingEdges():
+				print "   Edge index", edge.index 
+				i = 0
+				for morph in edge.labels:
+					print "%12s" % morph,
+					i+=1
+					if i%6 == 0: print
+					elif i==len(edge.labels): print
+			print "\n\n"		
+			continue
+		
+		if False:     # THIS SECTION REPLACED BY ABOVE  audrey  2014_09_07    state.index (not stateno) matches the graph
 			stateno = raw_input("State number:")
 			if stateno == "" or stateno == "exit":
 				break
@@ -395,7 +430,8 @@ while True:
 			for state in morphology.States:
 				if state.index == stateno:
 					break	
-			state = morphology.States[stateno]
+			state = morphology.States[stateno]   
+			print "state.index:  ", state.index   #audrey  2014_09_07  N.B. For this state (from preceding line), state.index != stateno
 			for edge in state.getOutgoingEdges():
 				print "Edge number", edge.index 
 				i = 0
@@ -405,14 +441,35 @@ while True:
 					if i%6 == 0: print 
 			print "\n\n"		
 			continue
-	if word == "Edge":
+			
+	elif word == "Edge":
 		while True:
+			edgeidx = raw_input("Edge index:")
+			if edgeidx == "" or edgeidx == "exit":
+				break
+			edgeidx = int(edgeidx)
+			for edge in morphology.Edges:
+				if edge.index == edgeidx:
+					break
+			#print "From state", morphology.Edges[edgeidx].fromState.index, "To state", morphology.Edges[edgeidx].toState.index
+			print "   From state", edge.fromState.index, "To state", edge.toState.index
+			i=0
+			for morph in edge.labels:
+				print "%12s" % morph,
+				i+=1
+				if i%6 == 0: print
+				elif i==len(edge.labels): print				
+			print "\n\n"
+			continue
+		
+		if False:     # THIS SECTION REPLACED BY ABOVE  audrey  2014_09_07    edge.index (not edgeno) matches the graph
 			edgeno = raw_input("Edge number:")
 			if edgeno == "" or edgeno == "exit":
 				break
 			edgeno = int(edgeno)
 			for edge in morphology.Edges:
 				if edge.index == edgeno:
+					print "edge.index; ", edge.index
 					break
 			print "From state", morphology.Edges[edgeno].fromState.index, "To state", morphology.Edges[edgeno].toState.index
 			for edge in morphology.Edges:
@@ -424,44 +481,54 @@ while True:
 					print	
 			print "\n\n"
 			continue
-	if word == "graph":
+			
+	elif word == "graph":
 		while True:
 			stateno = raw_input("Graph state number:")
 			
-	del CompletedParses[:]
-	del IncompleteParses[:]
-	del initialParseChain[:]
-	startingParseChunk = parseChunk("", word)
-	startingParseChunk.toState = morphology.startState
+	else:
+		del CompletedParses[:]
+		del IncompleteParses[:]
+		del initialParseChain[:]
+		startingParseChunk = parseChunk("", word)
+		print "startingParseChunk.morph: ", startingParseChunk.morph
+		startingParseChunk.toState = morphology.startState
+		print "startingParseChunk.toState.index: ", startingParseChunk.toState.index
 
-	initialParseChain.append(startingParseChunk)
-	IncompleteParses.append(initialParseChain)
-	while len(IncompleteParses) > 0 :
-		CompletedParses, IncompleteParses = morphology.lparse(CompletedParses, IncompleteParses)
-	if len(CompletedParses) == 0: print "no analysis found." 
+		initialParseChain.append(startingParseChunk)
+		print "initialParseChain: ", initialParseChain
+		IncompleteParses.append(initialParseChain)
+		print "IncompleteParses: ", IncompleteParses
+		while len(IncompleteParses) > 0 :
+			print
+			print "length of IncompleteParses: ", len(IncompleteParses)
+			#CompletedParses, IncompleteParses = morphology.lparse(CompletedParses, IncompleteParses)
+			CompletedParses, IncompleteParses = morphology.lparseForTracking(CompletedParses, IncompleteParses)
+		if len(CompletedParses) == 0: print "no analysis found." 
+		else: print
 	 
-	for parseChain in CompletedParses:
-		for thisParseChunk in  parseChain:			
-			if (thisParseChunk.edge):				 
-				print "\t",thisParseChunk.morph,  
-		print 
-	print
-
-	for parseChain in CompletedParses:
-		print "\tStates: ",
-		for thisParseChunk in  parseChain:			
-			if (thisParseChunk.edge):				 
-				print "\t",thisParseChunk.fromState.index, 
-		print "\t",thisParseChunk.toState.index 	 
-	print 
-
-	for parseChain in CompletedParses:
-		print "\tEdges: ",
-		for thisParseChunk in  parseChain:			
-			if (thisParseChunk.edge):				 
-				print "\t",thisParseChunk.edge.index,
+		for parseChain in CompletedParses:
+			for thisParseChunk in  parseChain:			
+				if (thisParseChunk.edge):				 
+					print "\t",thisParseChunk.morph,  
+			print 
 		print
-	print "\n\n"
+
+		for parseChain in CompletedParses:
+			print "\tStates: ",
+			for thisParseChunk in  parseChain:			
+				if (thisParseChunk.edge):				 
+					print "\t",thisParseChunk.fromState.index, 
+			print "\t",thisParseChunk.toState.index 	 
+		print 
+
+		for parseChain in CompletedParses:
+			print "\tEdges: ",
+			for thisParseChunk in  parseChain:			
+				if (thisParseChunk.edge):				 
+					print "\t",thisParseChunk.edge.index,
+			print
+		print "\n\n"
 
 
 

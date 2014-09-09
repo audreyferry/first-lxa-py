@@ -1,6 +1,7 @@
 import lxa_module
 import pygraphviz as pgv
 import copy
+import pickle
 
 #------------------------------------------------------------------------------------------#
 class parseChunk:
@@ -274,7 +275,6 @@ class Edge_lxa:
 """
 #----------------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------------------------------#
-
 class FSA_lxa:
 
 #----------------------------------------------------------------------------------------------------------------------------#
@@ -339,6 +339,58 @@ class FSA_lxa:
 		
 	
  
+	#-----------------------------------------------------------# 
+	def save_obj(self, obj, filename ):                             #audrey  2014_09_06
+		fp = open(filename, 'wb')
+		pickle.dump(obj, fp, pickle.HIGHEST_PROTOCOL)
+		fp.close()
+		
+	def saveFSA(self):
+		self.save_obj(self.States, 'Pkl_States.p')
+		self.save_obj(self.Edges, 'Pkl_Edges.p')
+		self.save_obj(self.startState, 'Pkl_startState.p')
+		self.save_obj(self.endState, 'Pkl_endState.p')
+		self.save_obj(self.splitEndState, 'Pkl_splitEndState.p')
+		self.save_obj(self.wordParseDict, 'Pkl_wordParseDict.p')
+		self.save_obj(self.EdgePairsToIgnore, 'Pkl_EdgePairsToIgnore.p')
+		self.save_obj(self.dictOfLists_parses, 'Pkl_dictOfLists_parses.p')
+		
+	
+	def loadFSA(self):
+		print "loading States"
+		fp = open('Pkl_States.p', 'rb')
+		self.States = pickle.load(fp)
+		
+		print "loading Edges"
+		fp = open('Pkl_Edges.p', 'rb')
+		self.Edges = pickle.load(fp)
+		
+		print "loading startState, endState, splitEndState information"
+		fp = open('Pkl_startState.p', 'rb')
+		self.startState = pickle.load(fp)
+		fp = open('Pkl_endState.p', 'rb')
+		self.endState = pickle.load(fp)
+		fp = open('Pkl_splitEndState.p', 'rb')
+		self.splitEndState = pickle.load(fp)
+		
+		print "loading wordParseDict"
+		fp = open('Pkl_wordParseDict.p', 'rb')
+		self.wordParseDict = pickle.load(fp)
+		
+		print "loading EdgePairsToIgnore"
+		fp = open('Pkl_EdgePairsToIgnore.p', 'rb')
+		self.EdgePairsToIgnore = pickle.load(fp)
+
+		print "loading dictOfLists_parses"
+		fp = open('Pkl_dictOfLists_parses.p', 'rb')
+		self.dictOfLists_parses = pickle.load(fp)
+		
+		print "finished loading"
+		print
+	
+		
+	
+
 	#-----------------------------------------------------------#
 	def addChange (self, change):
 		self.historyOfChanges.append(change)
@@ -392,6 +444,7 @@ class FSA_lxa:
 	def addSignature (self, leftlist, rightlist, suffixFlag):
 		if self.splitEndState == True:
 			myEndState = self.addState()
+			myEndState.acceptingStateFlag = True        #audrey  2014_09_06
 		else:
 			myEndState = self.endState
 
@@ -1112,7 +1165,8 @@ class FSA_lxa:
 						if edge4.fromState == edge3.fromState and edge4.toState == edge2.fromState:
 							motherState = edge3.fromState	
 							#print "\t(", edge1.index, edge2.index, ") Found common mother state", motherState.index				
-			if motherState != None:
+#			if motherState != None:  #  should be ==? audrey  2014_09_02
+			if motherState == None:
 				for edge3 in self.Edges:	
 					if edge3.fromState == edge1.toState:
 						for edge4 in self.Edges:
@@ -1154,8 +1208,10 @@ class FSA_lxa:
 		for word in wordlist:
 			if index % 1000 == 0:
 				print index
+				print word
 			index += 1
 			self.dictOfLists_parses[word] = self.parseWord(word)
+			#print "self.dictOfLists_parses[word]: ", self.dictOfLists_parses[word]
 		#return self.dictOfLists_outputList
 		return  self.dictOfLists_parses 
 	#-----------------------------------------------------------------------------#
@@ -1164,13 +1220,13 @@ class FSA_lxa:
 		currentParseChain = IncompleteParses.pop()  # or we could start reading it from the beginning, it shouldn't matter...	
 		currentParseChunk = currentParseChain[-1]
 		currentParseToState = currentParseChunk.toState
-		  
+
 		outgoingedges = currentParseToState.getOutgoingEdges()
 		currentRemainingString = currentParseChunk.remainingString
-	 
-		for edge in outgoingedges:		 
+		
+		for edge in outgoingedges:
 			for label in edge.labels:
-				if label == "NULL" and len(currentParseChunk.remainingString) == 0 and edge.toState.acceptingStateFlag == True:				 
+				if label == "NULL" and len(currentParseChunk.remainingString) == 0 and edge.toState.acceptingStateFlag == True:	
 					CopyOfCurrentParseChain = list()
 					for item in currentParseChain:
 						chunkcopy = parseChunk(item.morph, item.remainingString, item.edge)
@@ -1193,9 +1249,71 @@ class FSA_lxa:
 						CompletedParses.append(CopyOfCurrentParseChain)										
 					else:
 						newRemainingString = currentRemainingString[labellength:]
-						newParseChunk = parseChunk(label, newRemainingString,edge)			 
+						newParseChunk = parseChunk(label, newRemainingString,edge)
 						CopyOfCurrentParseChain.append ( newParseChunk )					 
 						IncompleteParses.append(CopyOfCurrentParseChain)
+	
+		return (CompletedParses, IncompleteParses)
+
+
+	#-----------------------------------------------------------------------------#
+	def lparseForTracking (self, CompletedParses, IncompleteParses):   # audrey  Has loads of print statements; called from code for user inquiries 
+	#-----------------------------------------------------------------------------#
+		currentParseChain = IncompleteParses.pop()  # or we could start reading it from the beginning, it shouldn't matter...	
+		currentParseChunk = currentParseChain[-1]
+		currentParseToState = currentParseChunk.toState
+		
+		print "Now at top of lparse"
+		print "currentParseChain: ", currentParseChain
+		print "currentParseChunk.morph: ", currentParseChunk.morph
+		print "currentParseToState.index: ", currentParseToState.index
+		
+		  
+		outgoingedges = currentParseToState.getOutgoingEdges()
+		currentRemainingString = currentParseChunk.remainingString
+		
+		#print "outgoingedges: ", outgoingedges
+		print "currentRemainingString: ", currentRemainingString
+	 
+		for edge in outgoingedges:
+			print "outgoing edge index: ", edge.index
+			for label in edge.labels:
+				#print "label: ", label
+				if label == "NULL" and len(currentParseChunk.remainingString) == 0 and edge.toState.acceptingStateFlag == True:	
+					print "Now at beginning of NULL acceptance case"
+					CopyOfCurrentParseChain = list()
+					for item in currentParseChain:
+						chunkcopy = parseChunk(item.morph, item.remainingString, item.edge)
+						CopyOfCurrentParseChain.append(chunkcopy)				 
+					newParseChunk = parseChunk(label, "",edge)	
+					CopyOfCurrentParseChain.append(newParseChunk)
+					CompletedParses.append(CopyOfCurrentParseChain)
+					print "  label, newRemainingString, edge.toState.index: ", "NULL", "", edge.toState.index
+					print "CompletedParses: ", CompletedParses
+					break  # break in label's for
+				
+			
+				labellength = len(label)			 
+				if currentRemainingString[:labellength] == label:
+					print "Now at beginning of non-NULL label:", label
+					CopyOfCurrentParseChain = list()
+					for item in currentParseChain:
+						chunkcopy = parseChunk(item.morph, item.remainingString, item.edge)					
+						CopyOfCurrentParseChain.append(chunkcopy)
+					if labellength == len( currentRemainingString ) and edge.toState.acceptingStateFlag == True:
+					 	print "Now in non-NULL acceptance case"
+						print "  label, newRemainingString, edge.toState.index: ", label, "", edge.toState.index
+						newParseChunk = parseChunk(label, "",edge)	
+						CopyOfCurrentParseChain.append( newParseChunk )
+						CompletedParses.append(CopyOfCurrentParseChain)										
+						print "CompletedParses: ", CompletedParses
+					else:
+						print "Now in continue case"
+						newRemainingString = currentRemainingString[labellength:]
+						newParseChunk = parseChunk(label, newRemainingString,edge)
+						CopyOfCurrentParseChain.append ( newParseChunk )					 
+						IncompleteParses.append(CopyOfCurrentParseChain)
+						print "  label, newRemainingString, edge.toState.index: ", label, newRemainingString, edge.toState.index
 	
 		return (CompletedParses, IncompleteParses)
 	
