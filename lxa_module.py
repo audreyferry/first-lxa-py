@@ -95,30 +95,43 @@ def findSignatureInformationContent (signatures, signature, bitsPerLetter):
 	stemset = signatures[signature]
 	for stem in stemset:
 		stemlength = len(stem)
+		#print "stem: ", stem
+		#print "stemlength: ", stemlength
 		stemSetPhonoInformation += bitsPerLetter * stemlength
-		stemSetOrderingInformation += math.log( stemlength * (stemlength -1)/ 2,2)  
-	affixList = signature.split(".")
+		#print "stemSetPhonoInformation ", stemSetPhonoInformation
+		stemSetOrderingInformation += math.log( stemlength * (stemlength -1)/ 2,2)   # audrey - questions re calculation
+		#print "stemSetOrderingInformation: ", stemSetOrderingInformation
+#	affixList = signature.split(".")
+	affixList = signature.split("-")                                                     # audrey  2014_09_02
 	for affix in affixList:
 		affixlength = len(affix)
+		#print "affix: ", affix
+		#print "affixlength: ", affixlength
 		affixPhonoInformation += bitsPerLetter * len(affix)
+		#print "affixPhonoInformation: ", affixPhonoInformation
 		if affixlength > 1:
-			affixOrderingInformation += math.log ( affixlength * (affixlength -1)/2,2)
+			affixOrderingInformation += math.log ( affixlength * (affixlength -1)/2,2) # audrey - questions re calculation
 		else:
 			affixOrderingInformation = 0
+		#print "affixOrderingInformation: ", affixOrderingInformation
 	phonoInformation = int(stemSetPhonoInformation + affixPhonoInformation)
+	#print "sig_phonoInformation: ", phonoInformation
 	orderingInformation = int(stemSetOrderingInformation + affixOrderingInformation)
+	#print "sig_orderingInformation: ", orderingInformation
 	return (phonoInformation, orderingInformation)
 # ---------------------------------------------------------#
 def makeWordListFromSignature (signature, stemset):
 	wordlist = list()
-	affixlist = signature.split('.')
+	#affixlist = signature.split('.')
+	affixlist = signature.split('-')               # audrey  2014_09_02
 	for stem in stemset:
 		for affix in affixlist:
 			if affix == "NULL":
 				word = stem
 			else:
 				word = stem + affix
-		wordlist.append (word)
+		#wordlist.append (word)
+			wordlist.append (word)         # audrey  2014_09_02
 	return wordlist
 # ---------------------------------------------------------#		
 def FindSignature_LetterCountSavings(Signatures, sig):
@@ -140,8 +153,12 @@ def findWordListInformationContent (wordlist, bitsPerLetter):
 	orderingInformation = 0
 	for word in wordlist:
 		wordlength = len(word)
+		#print "word: ", word
+		#print "wordlength: ", wordlength
 		phonoInformation += bitsPerLetter * wordlength
-		orderingInformation += wordlength*(wordlength-1) / 2
+		#print "word_phonoInformation: ", phonoInformation
+		orderingInformation += wordlength*(wordlength-1) / 2        # audrey - questions re calculation
+		#print "word_orderingInfomation: ", orderingInformation
 	return (phonoInformation, orderingInformation)
 
 # ------------------- end of New -----------------------------------------------------------------------------------	 
@@ -1011,6 +1028,8 @@ def printSignatures(Signatures, WordToSig, StemCounts, outfile, encoding, FindSu
 	count = 0
 	print >>outfile, "*** Stems in each signature"
 	for sig, stemcount, robustness in DisplayList:
+	#if True:
+        	#sig = 'll-t'   # EXAMPLE used to investigate InformtionContent calculations
 		if encoding == "utf8":
 			print >>outfile, "\n=============================================\n",sig, "\n"
 		else:
@@ -1051,6 +1070,7 @@ def printSignatures(Signatures, WordToSig, StemCounts, outfile, encoding, FindSu
 		# ------------------- New -----------------------------------------------------------------------------------
 		bitsPerLetter = 5
 		wordlist = makeWordListFromSignature (sig, Signatures[sig])
+		#print wordlist
 		(a,b) = findWordListInformationContent(wordlist, bitsPerLetter)
 		(c,d) = findSignatureInformationContent(Signatures, sig, bitsPerLetter)
 		formatstring = '%35s %10d + %10d = %10d'
