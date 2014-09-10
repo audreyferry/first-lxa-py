@@ -357,15 +357,15 @@ class FSA_lxa:
 		
 	
 	def loadFSA(self):
-		print "loading States"
+		print "   loading States"
 		fp = open('Pkl_States.p', 'rb')
 		self.States = pickle.load(fp)
 		
-		print "loading Edges"
+		print "   loading Edges"
 		fp = open('Pkl_Edges.p', 'rb')
 		self.Edges = pickle.load(fp)
 		
-		print "loading startState, endState, splitEndState information"
+		print "   loading startState, endState, splitEndState information"
 		fp = open('Pkl_startState.p', 'rb')
 		self.startState = pickle.load(fp)
 		fp = open('Pkl_endState.p', 'rb')
@@ -373,20 +373,19 @@ class FSA_lxa:
 		fp = open('Pkl_splitEndState.p', 'rb')
 		self.splitEndState = pickle.load(fp)
 		
-		print "loading wordParseDict"
+		print "   loading wordParseDict"
 		fp = open('Pkl_wordParseDict.p', 'rb')
 		self.wordParseDict = pickle.load(fp)
 		
-		print "loading EdgePairsToIgnore"
+		print "   loading EdgePairsToIgnore"
 		fp = open('Pkl_EdgePairsToIgnore.p', 'rb')
 		self.EdgePairsToIgnore = pickle.load(fp)
 
-		print "loading dictOfLists_parses"
+		print "   loading dictOfLists_parses"
 		fp = open('Pkl_dictOfLists_parses.p', 'rb')
 		self.dictOfLists_parses = pickle.load(fp)
 		
 		print "finished loading"
-		print
 	
 		
 	

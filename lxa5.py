@@ -433,7 +433,7 @@ while True:
 			state = morphology.States[stateno]   
 			print "state.index:  ", state.index   #audrey  2014_09_07  N.B. For this state (from preceding line), state.index != stateno
 			for edge in state.getOutgoingEdges():
-				print "Edge number", edge.index 
+				print "Outgoing edge index", edge.index 
 				i = 0
 				for morph in edge.labels:
 					print "%12s" % morph,
