@@ -977,6 +977,7 @@ def printSignatures(Signatures, WordToSig, StemCounts, outfile, encoding, FindSu
 	# ____________________________________________
 
 	
+	print >> outfile, "\n=======  SOURCE  function: printSignatures   location:(i)   file: lxa_module.py   ======="
 	for sig, stemset in SortedListOfSignatures:
 		stemlist = list(stemset)
 		this_stem = stemlist[0]
@@ -990,7 +991,8 @@ def printSignatures(Signatures, WordToSig, StemCounts, outfile, encoding, FindSu
 
 
 
-	print >>outfile,  "\n--------------------------------------------------------------"
+	print >> outfile, "\n=======  SOURCE  function: printSignatures   location:(ii)   file: lxa_module.py   ======="
+	print >>outfile,  "--------------------------------------------------------------"
 	print >>outfile, '{0:<35}{1:12s} {2:12s}'.format("Signature",  "Stem count", "Robustness")
 	print >>outfile,  "--------------------------------------------------------------"
 	for sig, stemcount, robustness in DisplayList:	
@@ -999,12 +1001,14 @@ def printSignatures(Signatures, WordToSig, StemCounts, outfile, encoding, FindSu
 		if encoding == "utf8":
 			print >>outfile, sig, stemcount, robustness			
 		else:
-			print >>outfile, '{0:<35}{1:6d} {2:6d}'.format(sig, stemcount, robustness ) 
+			print >>outfile, '{0:<35}{1:6d} {2:6d}'.format(sig, stemcount, robustness )   
 	print >>outfile,  "--------------------------------------------------------------"
+
 
 	# Print signatures (not their stems) sorted by robustness
 	
-	print >>outfile, "\nSorted by Robustness\n"
+	print >> outfile, "\n=======  SOURCE  function: printSignatures   location:(iii)   file: lxa_module.py   ======="
+	print >>outfile, "Sorted by Robustness\n"
 	DisplayList = sorted( DisplayList, lambda x,y: cmp(x[2], y[2] ) , reverse=True)
 	print >>outfile, '{0:<35}{1:12s} {2:12s}'.format("Signature",  "Stem count", "Robustness")
 	print >>outfile,  "--------------------------------------------------------------"
@@ -1026,6 +1030,7 @@ def printSignatures(Signatures, WordToSig, StemCounts, outfile, encoding, FindSu
 	stemlist = []
 	reversedstemlist = []
 	count = 0
+	print >> outfile, "\n=======  SOURCE  function: printSignatures   location:(iv)   file: lxa_module.py   ======="
 	print >>outfile, "*** Stems in each signature"
 	for sig, stemcount, robustness in DisplayList:
 	#if True:
@@ -1101,6 +1106,7 @@ def printSignatures(Signatures, WordToSig, StemCounts, outfile, encoding, FindSu
 		words = WordToSig.keys()
 		words.sort()
 		print >>outfile, "***" 
+		print >> outfile, "\n=======  SOURCE  function: printSignatures   location:(v)   file: lxa_module.py   ======="
 		print >>outfile,  "\n--------------------------------------------------------------"
 		print >>outfile, "Words and their signatures"
 		print >>outfile,  "--------------------------------------------------------------"
@@ -1160,6 +1166,7 @@ def printWordsToSigTransforms(Signatures, WordToSig, StemCounts, outfile, encodi
 				#print >>outfile, word, "\t",  transform	
 	wordlist = lexicon.keys()
 	wordlist.sort()
+	print >> outfile, "\n=======  SOURCE  function: printWordsToSigTransforms   file: lxa_module.py   ======="	
 	for word in wordlist:
 		print >>outfile, '%20s \t %40s' % ( word,  lexicon[word])
 		#	print >>outfile, '%18s' %self.affixlabels[affix],
@@ -1588,7 +1595,7 @@ def MakeSignatures_1(StemToWord, StemToSig, FindSuffixesFlag, fsa,outfile,  NoLe
 		thissig="-".join( affixlist )  
 		if not thissig in Signatures:
 			Signatures[thissig]=set()
-		Signatures[thissig].add(stem)
+		Signatures[thissig].add(stem)        ####### IMPORTANT ########
 		StemToSig[stem] = thissig
 		for word in StemToWord[stem]:
 			if not word in WordToSig:
@@ -1596,6 +1603,7 @@ def MakeSignatures_1(StemToWord, StemToSig, FindSuffixesFlag, fsa,outfile,  NoLe
 			WordToSig[word].append(thissig) 
 	SortedListOfSignatures = sorted( Signatures.items(), lambda x,y: cmp(len(x[1]), len(y[1]) ) , reverse=True)
 
+	print >> outfile, "\n=======  SOURCE  function: MakeSignatures_1   file: lxa_module.py   =======\n"	
 	Differences = list()
 	for sig1, stemlist1 in SortedListOfSignatures:
 		for sig2, stemlist2 in SortedListOfSignatures:
@@ -1615,13 +1623,29 @@ def MakeSignatures_1(StemToWord, StemToSig, FindSuffixesFlag, fsa,outfile,  NoLe
 				sig2string, " "*(width-len(sig2string)),\
 				item[4], " "*(width-len(item[4]))
 
-	for sig, stemlist in SortedListOfSignatures:
+
+	############## INSERT   Add stems to all appropriate signatures ################      #audrey 2014_09_12
+	#for stem in StemToSig.keys():
+	#	canonicalaffixset = set(StemToSig[stem].split('-'))
+	#	for sig in Signatures.keys():
+	#		affixset = set(sig.split('-'))
+	#		if affixset.issubset(canonicalaffixset):
+	#			Signatures[sig].add(stem)
+	############## INSERT   Add stems to all appropriate signatures ################      #audrey 2014_09_12
+
+	
+	print >> outfile, "\n=======  SOURCE  function: MakeSignatures_1   file: lxa_module.py   ======="
+	print >> outfile, "Show initial FSA representation for newly-minted signature" 
+	print >> outfile, "\n=======  SOURCE  function: addSignature   file: fsa.py   ======="
+	for sig, stemlist in SortedListOfSignatures:    # audrey  better "stemset" than "stemlist"
 		affixlist = list(sig.split('-'))
 		if len(stemlist) > StemCountThreshold:
 			if FindSuffixesFlag: 
-				fsa.addSignature(stemlist, affixlist, FindSuffixesFlag)	
+				#print >> outfile, sig, "\t",                                           #audrey  2014_09_14   Want to show edges
+				fsa.addSignature(stemlist, affixlist, FindSuffixesFlag, outfile)	
 			else:
-				fsa.addSignature(affixlist, stemlist, FindSuffixesFlag)	
+				fsa.addSignature(affixlist, stemlist, FindSuffixesFlag, outfile)
+	print >> outfile, "\n"	
 #----------------------------------------------------------------------------------------------------------------------------#
 	return (StemToWord, Signatures, WordToSig, StemToSig)
 #----------------------------------------------------------------------------------------------------------------------------#

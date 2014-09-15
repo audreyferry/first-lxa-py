@@ -356,7 +356,7 @@ class FSA_lxa:
 		self.save_obj(self.dictOfLists_parses, 'Pkl_dictOfLists_parses.p')
 		
 	
-	def loadFSA(self):
+	def loadFSA(self, forParseOnly):   # forParseOnly takes values {True, False}
 		print "   loading States"
 		fp = open('Pkl_States.p', 'rb')
 		self.States = pickle.load(fp)
@@ -373,17 +373,18 @@ class FSA_lxa:
 		fp = open('Pkl_splitEndState.p', 'rb')
 		self.splitEndState = pickle.load(fp)
 		
-		print "   loading wordParseDict"
-		fp = open('Pkl_wordParseDict.p', 'rb')
-		self.wordParseDict = pickle.load(fp)
+		if not forParseOnly:
+			print "   loading wordParseDict"
+			fp = open('Pkl_wordParseDict.p', 'rb')
+			self.wordParseDict = pickle.load(fp)
 		
-		print "   loading EdgePairsToIgnore"
-		fp = open('Pkl_EdgePairsToIgnore.p', 'rb')
-		self.EdgePairsToIgnore = pickle.load(fp)
+			print "   loading EdgePairsToIgnore"
+			fp = open('Pkl_EdgePairsToIgnore.p', 'rb')
+			self.EdgePairsToIgnore = pickle.load(fp)
 
-		print "   loading dictOfLists_parses"
-		fp = open('Pkl_dictOfLists_parses.p', 'rb')
-		self.dictOfLists_parses = pickle.load(fp)
+			print "   loading dictOfLists_parses"
+			fp = open('Pkl_dictOfLists_parses.p', 'rb')
+			self.dictOfLists_parses = pickle.load(fp)
 		
 		print "finished loading"
 	
@@ -440,7 +441,7 @@ class FSA_lxa:
 	def initializeWithWordList( self, wordlist ): 
 		self.addEdge(self.startState, self.endState).addLabels(wordlist)		
 	#-----------------------------------------------------------#
-	def addSignature (self, leftlist, rightlist, suffixFlag):
+	def addSignature (self, leftlist, rightlist, suffixFlag, outfile):   # audrey  2014_09_14  added 'outfile' parameter
 		if self.splitEndState == True:
 			myEndState = self.addState()
 			myEndState.acceptingStateFlag = True        #audrey  2014_09_06
@@ -449,10 +450,14 @@ class FSA_lxa:
 
 		newMiddleState = self.addState()
 		if suffixFlag:
+			sig = ('-').join(rightlist)
+			print >>outfile, sig, "\t", 
 			thisedge = self.addEdge(self.startState, newMiddleState, True)
 			thisedge.addLabels(leftlist)
+			print >>outfile, "(", thisedge.index, ":", thisedge.fromState.index, "->", thisedge.toState.index,  # audrey  2014_09_14
 			thatedge = self.addEdge(newMiddleState, myEndState, False)
 			thatedge.addLabels(rightlist)
+			print >>outfile, ", ", thatedge.index, ":", thatedge.fromState.index, "->", thatedge.toState.index, ")"  # audrey  2014_09_14
 		else: 
 	 		thisedge = self.addEdge(self.startState, newMiddleState, False)
 			thisedge.addLabels(leftlist) 
@@ -482,7 +487,7 @@ class FSA_lxa:
 		SortedListOfSignatures = sorted( Signatures.items(), lambda x,y: cmp(len(x[1]), len(y[1]) ) , reverse=True)
 		for sig, stemlist in SortedListOfSignatures:
 			if len(stemlist) > tempthreshold:
-				self.addSignature(stemlist, sig)		
+				self.addSignature(stemlist, sig, None)		 #audrey 2014_09_14  had to add an outfile; used None
 	#-----------------------------------------------------------#
 	def getAllEdgesToThisState(self, thisState):
 		edgelist = list()
@@ -523,22 +528,24 @@ class FSA_lxa:
 			if stem[:-1] in Morphemes:
 				DubiousMorphemes[stem] = 1
 				DubiousMorphemes[stem[:-1]]  = 1
+		print >> outfile, "\n=======  SOURCE  function: printFSA   location:(i)   file: fsa.py   ======="
 		for stem in sorted(Morphemes):
  			if stem in DubiousMorphemes:
 				print >>outfile, stem, "*"
 			else:
 				print >>outfile, stem
 		
+		print >> outfile, "\n=======  SOURCE  function: printFSA   location:(ii)   file: fsa.py   ======="
 		for state in self.States:
-			print >>outfile, "\n\nState number: ", state.index
+			print >>outfile, "\n\nState index: ", state.index
 			for edge in self.Edges:	
 				if edge.fromState == state:
 					printlist = list()
-					print >>outfile, "\n\tEdge number", edge.index, "To state:", edge.toState.index,
+					print >>outfile, "\n\tEdge index", edge.index, "  toState:", edge.toState.index,
 					if edge.stemFlag == False:
-						print >>outfile, "Affix"
+						print >>outfile, "  Affix"
 					if edge.stemFlag == True:
-						print >>outfile, "Stem"
+						print >>outfile, "  Stem"
 					colno = 0
 					reverselist = list()
 					#del edge.labels[:]
@@ -583,7 +590,7 @@ class FSA_lxa:
 
 		(bestedge, bestchunk, bestweight, bestcount) = candidatelist[0]
 
-		print >>outfile, bestchunk, ' '* (10-len(bestchunk)), bestedge.index, "weight: ", bestweight, ", and count:", bestcount,  "out of", len(bestedge.labels), "on its edge."
+		print >>outfile, bestchunk, ' '* (10-len(bestchunk)), "edge", bestedge.index, "weight: ", bestweight, ", and count:", bestcount,  "out of", len(bestedge.labels), "on its edge."
 		#print "\t before len best chunk" 
 		if len(bestchunk) == 1: 		#we set higher conditions on this re-analysis
 			#print "\t len is 1" 
@@ -616,7 +623,7 @@ class FSA_lxa:
 		newMidState = self.addStateAfter(edge.fromState)	
 	 
 		#print >>outfile, "Split stems based on: ", stemcondition
-		print >>outfile, "\tNew stems:\n\n",
+#		print >>outfile, "\tNew stems:\n",        # moved to appear after new printfs below
 		if FindSuffixesFlag == True:
 			for stem in edge.labels:
 				if stem[-1*len(stemcondition):] == stemcondition:	
@@ -624,17 +631,25 @@ class FSA_lxa:
 			#print "\t A" 
 			if len(stems) == 0:   
 				return;
-			if len(stems) == len(edge.labels) and edge.toState.findNumberOfIncomingEdges == 1:  #all the stems would be moved! Unnecessary.				 
+			if len(stems) == len(edge.labels) and edge.toState.findNumberOfIncomingEdges == 1:  #all the stems would be moved! Unnecessary.	#audrey - NEVER OCCURS IN OUTFILE  2014_09_14	 
 				newedge2 = self.addEdge(newMidState,edge.toState)
 				newedge2.addLabel(stemcondition)			
+				print >>outfile, "\tFor existing edge", edge.index, ":", edge.fromState.index, "->", edge.toState.index
+				print >>outfile, "\treplace by edges (", edge.index, ":", edge.fromState.index, "->", newMidState.index,  ",  ", newedge2.index, ":", newedge2.fromState.index, "->", newedge2.toState.index, ")"
+				print >>outfile, "\tNew stems:\n\n",
 				templist = list(edge.labels)
 				del edge.labels[:]
  				for string in templist:
-					edge.labels.append(string[: -1*stemconditionlength])	
+					edge.labels.append(string[: -1*stemconditionlength])
+ 					print >>outfile, "\t\t", string,  " "*(15-len(string)), string[: -1*stemconditionlength]
+				edge.toState = newMidState        # audrey  2014_09_10
 				#print "\t B" 	 
 			else:		 							#normal case:				 
 				newedge1 = self.addEdgeFromSameStartState(edge, newMidState)
 				newedge2 = self.addEdge(newMidState, edge.toState, False)
+				print >>outfile, "\tFor existing edge", edge.index, ":", edge.fromState.index, "->", edge.toState.index
+				print >>outfile, "\tadd edges         (", newedge1.index, ":", newedge1.fromState.index, "->", newedge1.toState.index,  ",  ", newedge2.index, ":", newedge2.fromState.index, "->", newedge2.toState.index, ")"
+				print >>outfile, "\tNew stems:\n\n",
 				for stem in stems: 
 					print >>outfile, "\t\t", 	stem, " "*(15-len(stem)),
 					edge.removeLabel(stem)
@@ -1204,13 +1219,18 @@ class FSA_lxa:
 	#-----------------------------------------------------------------------------#
 		self.dictOfLists_parses = dict()
 		index = 1
+		NoAnalysisCount = 0                                 # audrey  2014_09_10
 		for word in wordlist:
 			if index % 1000 == 0:
-				print index
-				print word
+				print index, "\t", word, "\t", NoAnalysisCount
 			index += 1
 			self.dictOfLists_parses[word] = self.parseWord(word)
 			#print "self.dictOfLists_parses[word]: ", self.dictOfLists_parses[word]
+			
+			if self.dictOfLists_parses[word] == None:   # audrey  2014_09_10
+				NoAnalysisCount += 1
+		
+		print "NoAnalysisCount: ", NoAnalysisCount
 		#return self.dictOfLists_outputList
 		return  self.dictOfLists_parses 
 	#-----------------------------------------------------------------------------#
@@ -1263,8 +1283,8 @@ class FSA_lxa:
 		currentParseToState = currentParseChunk.toState
 		
 		print "Now at top of lparse"
-		print "currentParseChain: ", currentParseChain
-		print "currentParseChunk.morph: ", currentParseChunk.morph
+		#print "currentParseChain: ", currentParseChain
+		#print "currentParseChunk.morph: ", currentParseChunk.morph
 		print "currentParseToState.index: ", currentParseToState.index
 		
 		  
@@ -1287,8 +1307,8 @@ class FSA_lxa:
 					newParseChunk = parseChunk(label, "",edge)	
 					CopyOfCurrentParseChain.append(newParseChunk)
 					CompletedParses.append(CopyOfCurrentParseChain)
-					print "  label, newRemainingString, edge.toState.index: ", "NULL", "", edge.toState.index
-					print "CompletedParses: ", CompletedParses
+					print "  label, newRemainingString, this edge: ", "NULL", "", edge.index, ":", edge.fromState.index, "->", edge.toState.index
+					#print "CompletedParses: ", CompletedParses
 					break  # break in label's for
 				
 			
@@ -1301,10 +1321,10 @@ class FSA_lxa:
 						CopyOfCurrentParseChain.append(chunkcopy)
 					if labellength == len( currentRemainingString ) and edge.toState.acceptingStateFlag == True:
 					 	print "Now in non-NULL acceptance case"
-						print "  label, newRemainingString, edge.toState.index: ", label, "", edge.toState.index
+						print "  label, newRemainingString, this edge: ", label, "", edge.index, ":", edge.fromState.index, "->", edge.toState.index
 						newParseChunk = parseChunk(label, "",edge)	
 						CopyOfCurrentParseChain.append( newParseChunk )
-						CompletedParses.append(CopyOfCurrentParseChain)										
+						#CompletedParses.append(CopyOfCurrentParseChain)										
 						print "CompletedParses: ", CompletedParses
 					else:
 						print "Now in continue case"
@@ -1312,7 +1332,7 @@ class FSA_lxa:
 						newParseChunk = parseChunk(label, newRemainingString,edge)
 						CopyOfCurrentParseChain.append ( newParseChunk )					 
 						IncompleteParses.append(CopyOfCurrentParseChain)
-						print "  label, newRemainingString, edge.toState.index: ", label, newRemainingString, edge.toState.index
+						print "  label, newRemainingString, this edge: ", label, newRemainingString, edge.index, ":", edge.fromState.index, "->", edge.toState.index
 	
 		return (CompletedParses, IncompleteParses)
 	

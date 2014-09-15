@@ -26,6 +26,7 @@ import copy
 from collections import defaultdict
 from lxa_module import *
 
+
 #--------------------------------------------------------------------##
 #		user modified variables
 #--------------------------------------------------------------------##
@@ -198,6 +199,11 @@ if (not StemFileExistsFlag): # we use this to create a one-time list of stems wi
 			print >>stems_outfile, word,
 		print >>stems_outfile
 
+#print "StemToWord[france]: ", StemToWord["france"]
+#print "WordCounts - france's, france, francek, frances, francese: ", WordCounts["france's"], WordCounts["france"], WordCounts["francek"], WordCounts["frances"], WordCounts["francese"] 
+
+
+
 #-----------------------------------------------------------------------------------------------------------------#	
 #	1. Make signatures, and WordToSig dictionary, and Signature dictionary-of-stem-lists, and StemToSig dictionary
 #-----------------------------------------------------------------------------------------------------------------#	
@@ -250,8 +256,12 @@ if True:
 # Then we improve the one whose robustness increase is the greatest.
 #-------------------------------------------------------------------------------------------------------------------------------------#	
 
+print >>Signatures_outfile, "\n\n=======  SOURCE  file: lxa5.py   ======="
 print >>Signatures_outfile, "***"
-print >>Signatures_outfile, "*** 5. Finding robust suffixes in stem sets\n\n"
+print >>Signatures_outfile, "*** 5. Finding robust suffixes in stem sets\n"
+print >>Signatures_outfile, "\n=======  SOURCE  file: fsa.py   ======="
+print >>Signatures_outfile, "=======              function: find_highest_weight_affix_in_an_edge   ======="
+print >>Signatures_outfile, "=======              function: splitSignature                         =======\n"
 
 
 #---------------------------------------------------------------------------------#	
@@ -313,7 +323,8 @@ class parseChunk:
 localtime1 = time.asctime( time.localtime(time.time()) )
 print "Local current time :", localtime1
 
-morphology.dictOfLists_parses = morphology.parseWords(wordlist)
+############ COMMENT THIS OUT TO GET TO THE END SO I CAN INVESTIGATE BY STANDALONE PROGRAM ###########
+#morphology.dictOfLists_parses = morphology.parseWords(wordlist)    # audrey  2014_09_12
 
 localtime2 = time.asctime( time.localtime(time.time()) )
 #print "Time to parse all words: ", localtime2 - localtime1  #subtraction doesn't work for strings!
@@ -324,7 +335,7 @@ print "Local time after parse :", localtime2
 
  
 print >>FSA_outfile, "Finding common stems across edges."
-HowManyTimesToCollapseEdges = 9
+HowManyTimesToCollapseEdges = 9     # 0   TO SKIP THIS SECTION (TO ISOLATE PROBLEMS)
 for loop in range(HowManyTimesToCollapseEdges): 
  	print "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	print  "Loop number", loop
@@ -365,7 +376,7 @@ for loop in range(HowManyTimesToCollapseEdges):
 		print "Now we have merged two sister edges from line 374 **********"
 		state_changed_1 = state1
 		state_changed_2 = state2
-		morphology.EdgePairsToIgnore.append(edge1, edge2)
+		morphology.EdgePairsToIgnore.append((edge1, edge2))
 
 	
 	elif   morphology.mergeTwoStatesCommonDaughter((state3,state4))  : 
@@ -387,7 +398,8 @@ for loop in range(HowManyTimesToCollapseEdges):
 #------------------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------------------#
 
-morphology_copy = morphology.MakeCopy()
+############ COMMENT THIS OUT TO GET TO THE END SO I CAN INVESTIGATE BY STANDALONE PROGRAM ###########
+#morphology_copy = morphology.MakeCopy()   SAVING TiME -- 
 print
 print "Saving morphology FSA information to files for standalone access..."
 morphology.saveFSA()    #audrey  2014_09_06
@@ -412,7 +424,7 @@ while True:
 					break	
 			#####state = morphology.States[stateidx]   
 			for edge in state.getOutgoingEdges():
-				print "   Edge index", edge.index 
+				print "   Outgoing edge index", edge.index, ":", edge.fromState.index, "->", edge.toState.index 
 				i = 0
 				for morph in edge.labels:
 					print "%12s" % morph,
@@ -491,12 +503,12 @@ while True:
 		del IncompleteParses[:]
 		del initialParseChain[:]
 		startingParseChunk = parseChunk("", word)
-		print "startingParseChunk.morph: ", startingParseChunk.morph
+		#print "startingParseChunk.morph: ", startingParseChunk.morph
 		startingParseChunk.toState = morphology.startState
 		print "startingParseChunk.toState.index: ", startingParseChunk.toState.index
 
 		initialParseChain.append(startingParseChunk)
-		print "initialParseChain: ", initialParseChain
+		#print "initialParseChain: ", initialParseChain
 		IncompleteParses.append(initialParseChain)
 		print "IncompleteParses: ", IncompleteParses
 		while len(IncompleteParses) > 0 :

@@ -11,9 +11,11 @@ from fsa import *
 #morphology.saveFSA()    #audrey  2014_09_06
 
 print "Loading morphology FSA information from files ..."
+forParseOnly  = True
 splitEndState = True
-morphology= FSA_lxa(splitEndState)
-morphology.loadFSA()
+morphology = FSA_lxa(splitEndState)
+morphology.loadFSA(forParseOnly)
+
 
 initialParseChain = list()
 CompletedParses = list()
@@ -114,12 +116,12 @@ while True:
 		del IncompleteParses[:]
 		del initialParseChain[:]
 		startingParseChunk = parseChunk("", word)
-		print "startingParseChunk.morph: ", startingParseChunk.morph
+		#print "startingParseChunk.morph: ", startingParseChunk.morph
 		startingParseChunk.toState = morphology.startState
 		print "startingParseChunk.toState.index: ", startingParseChunk.toState.index
 
 		initialParseChain.append(startingParseChunk)
-		print "initialParseChain: ", initialParseChain
+		#print "initialParseChain: ", initialParseChain
 		IncompleteParses.append(initialParseChain)
 		print "IncompleteParses: ", IncompleteParses
 		while len(IncompleteParses) > 0 :
