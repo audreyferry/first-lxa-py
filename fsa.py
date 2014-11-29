@@ -436,7 +436,7 @@ class FSA_lxa:
 		for edge in templist:
 			if edge.deletedFlag == False:
 				self.Edges.append(edge)
-			else: print "\t\t> We found an edge to eliminate:", edge.index			
+			else: print "\t\t> We found an edge to eliminate:", edge.index	
 	#----------------------------------------------------------------------------#
 	def initializeWithWordList( self, wordlist ): 
 		self.addEdge(self.startState, self.endState).addLabels(wordlist)		
@@ -520,9 +520,10 @@ class FSA_lxa:
 		for edge in self.Edges:
 			#if edge.stemFlag == True:
 			for item in edge.labels:
-				if edge not in Morphemes:
+				#if edge not in Morphemes:           ############
+				if item not in Morphemes:             # audrey  2014_09_17
 					Morphemes[item] = list()
-				Morphemes[item].append(edge.index)
+				Morphemes[item].append(edge.index)    # Keys are used below, but not values, so correction above makes no difference
 		DubiousMorphemes = dict()		
 		for stem in Morphemes:
 			if stem[:-1] in Morphemes:
@@ -773,7 +774,12 @@ class FSA_lxa:
 	#-----------------------------------------------------------# 
 	def mergeTwoStatesCommonMother(self, state1, state2): #assumes they have a common mother
  		#------------------- Check if they lie in parallel  ----------------------------------------# 
- 		# That is, if one of them simply extends the other.
+ 		# That is, if one of them simply extends the other.  
+ 		
+ 		# audrey  2014_09_18. What is this about? Do we add a duplicate edge? If a new edge with new index is added here or anywhere
+ 		# else after some edges have been deleted, ITS INDEX MAY DUPLICATE AN EXISTING INDEX because it's assigned by len(self.Edges).
+ 		# It would be necessary to assign the index of a new edge instead by keeping track of highest index.
+ 		
 		for edge in self.Edges:
 			if edge.fromState == state1 and edge.toState == state2:
 				#print "line 644"
@@ -794,12 +800,12 @@ class FSA_lxa:
 				continue
 			if edge.toState == state2:
 				edge.toState = state1
-				#print "\t1m. We are changing edge", edge.index, ", which went from state",  edge.fromState.index, "to", state2.index
-				#print "\t2m. It now goes to state", state1.index
+				print "\t1m. We are changing edge", edge.index, ", which went from state",  edge.fromState.index, "to", state2.index #was commented
+				print "\t2m. It now goes to state", state1.index  #was commented
 			if edge.fromState == state2:
 				edge.fromState = state1
-				#print "\t3m. We are changing edge", edge.index, ", which went from state",  state2.index, "to state", edge.toState.index
-				#print "\t4m. It now goes from state", state1.index, "(and its to-state is unchanged)."				 
+				print "\t3m. We are changing edge", edge.index, ", which went from state",  state2.index, "to state", edge.toState.index  #was commented
+				print "\t4m. It now goes from state", state1.index, "(and its to-state is unchanged)."  #was commented				 
  				edge.dirtyFlag = True				
 		 
  		self.lookForTwinEdges() 
@@ -811,6 +817,11 @@ class FSA_lxa:
 		
 		#------------------- Check if they lie in parallel  ----------------------------------------# 
  		# That is, if one of them simply extends the other.
+ 		
+ 		# audrey  2014_09_18. What is this about? Do we add another edge between same points? If a new edge with new index is added here or
+ 		#  anywhere else after some edges have been deleted, ITS INDEX MAY DUPLICATE AN EXISTING INDEX because it's assigned by len(self.Edges).
+ 		# It would be necessary to assign the index of a new edge instead by keeping track of highest index.
+ 		
 		for edge in self.Edges:
 			if edge.fromState == state1 and edge.toState == state2:
 				newedge = self.addEdge(state1, state2, True)  # TODO we don't know if this is true or false
@@ -854,7 +865,7 @@ class FSA_lxa:
 				#if edge2.deletedFlag: 
 				#	continue
 				if edge1.fromState == edge2.fromState and edge1.toState == edge2.toState:
-					#print "\tSame from and to", edge1.index, edge2.index
+					print "\tSame from and to", edge1.index, edge2.index  #was commented
 					#if  edge1.stemFlag == True and edge2.stemFlag == True  : # TODO this flag is not working right. Fix It.
 					if len(edge1.labels) > Threshold and len(edge2.labels) > Threshold:
 						ActionList.append( (edge1,edge2) )
@@ -867,7 +878,9 @@ class FSA_lxa:
 		if edge1.fromState != edge2.fromState or edge1.toState != edge2.toState:
 			print "Problem...edge1", edge1.fromState.index, edge1.toState.index, edge2.fromState.index, edge2.toState.index
 			return None
-		edge1.labels.extend(edge2.labels)
+		#edge1.labels.extend(edge2.labels)                    # audrey  2014_09_17
+		labelset1 = set(edge1.labels)                         #
+		edge1.labels = list(labelset1.union(edge2.labels))    #
 		del edge2.labels[:]
 		edge2.deletedFlag 	= True		
 		edge2.fromState 	= None
@@ -1141,7 +1154,7 @@ class FSA_lxa:
 		ThisPairIsBadFlag = False
 		print "Finding common stems"		 
 		EdgeToEdgeCommonMorphs = dict()		 
-		for edgeno  in range(len(self.Edges)):
+		for edgeno  in range(len(self.Edges)): 
 			ThisPairIsBadFlag == False
 			edge1 = self.Edges[edgeno]
 			for edgeno2 in range(edgeno + 1, len(self.Edges)):
@@ -1324,7 +1337,7 @@ class FSA_lxa:
 						print "  label, newRemainingString, this edge: ", label, "", edge.index, ":", edge.fromState.index, "->", edge.toState.index
 						newParseChunk = parseChunk(label, "",edge)	
 						CopyOfCurrentParseChain.append( newParseChunk )
-						#CompletedParses.append(CopyOfCurrentParseChain)										
+						CompletedParses.append(CopyOfCurrentParseChain)										
 						print "CompletedParses: ", CompletedParses
 					else:
 						print "Now in continue case"

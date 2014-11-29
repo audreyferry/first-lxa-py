@@ -34,10 +34,29 @@ while True:
 			stateidx = int(stateidx)	
 			for state in morphology.States:      
 				if state.index == stateidx:  
+					for edge in state.getOutgoingEdges():
+						print "   Outgoing edge index", edge.index, ":", edge.fromState.index, "->", edge.toState.index 
+						i = 0
+						for morph in edge.labels:
+							print "%12s" % morph,
+							i+=1
+							if i%6 == 0: print
+							elif i==len(edge.labels): print
 					break	
-			#####state = morphology.States[stateidx]   
+			print "\n\n"		
+			continue
+		
+		while False:
+			stateidx = raw_input("State index:")
+			if stateidx == "" or stateidx == "exit":
+				break
+			stateidx = int(stateidx)	
+			for state in morphology.States:      
+				if state.index == stateidx:  
+					break	
+			#####state = morphology.States[stateidx]  
 			for edge in state.getOutgoingEdges():
-				print "   Edge index", edge.index 
+				print "   Outgoing edge index", edge.index, ":", edge.fromState.index, "->", edge.toState.index 
 				i = 0
 				for morph in edge.labels:
 					print "%12s" % morph,
@@ -75,15 +94,49 @@ while True:
 			edgeidx = int(edgeidx)
 			for edge in morphology.Edges:
 				if edge.index == edgeidx:
+					print "   From state", edge.fromState.index, "To state", edge.toState.index
+					i=0
+					for morph in sorted(edge.labels):      # audrey  2014_09_16  Alphabetize so one can check for a specific word
+						print "%12s" % morph,
+						i+=1
+						if i%6 == 0: print
+						elif i==len(edge.labels): print				
 					break
-			#print "From state", morphology.Edges[edgeidx].fromState.index, "To state", morphology.Edges[edgeidx].toState.index
+			print "\n\n"
+			continue
+		
+		while False:
+			edgeidx = raw_input("Edge index:")
+			if edgeidx == "" or edgeidx == "exit":
+				break
+			edgeidx = int(edgeidx)
+			for edge in morphology.Edges:
+				if edge.index == edgeidx:
+					break
 			print "   From state", edge.fromState.index, "To state", edge.toState.index
 			i=0
-			for morph in edge.labels:
+			for morph in sorted(edge.labels):      # audrey  2014_09_16  Alphabetize so one can check for a specific word
 				print "%12s" % morph,
 				i+=1
 				if i%6 == 0: print
 				elif i==len(edge.labels): print				
+			print "\n\n"
+			continue
+		
+		while False:     # TEMPORARY -- TO FIND OUT ABOUT REPEATS
+			edgeidx = raw_input("Edge index:")
+			if edgeidx == "" or edgeidx == "exit":
+				break
+			edgeidx = int(edgeidx)
+			for edge in morphology.Edges:
+				if edge.index == edgeidx:
+					print "   From state", edge.fromState.index, "To state", edge.toState.index
+					i=0
+					for morph in sorted(edge.labels):      # audrey  2014_09_16  Alphabetize so one can check for a specific word
+						print "%12s" % morph,
+						i+=1
+						if i%6 == 0: print
+						elif i==len(edge.labels): print				
 			print "\n\n"
 			continue
 		

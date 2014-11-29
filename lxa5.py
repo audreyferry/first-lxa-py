@@ -332,10 +332,11 @@ print "Local time after parse :", localtime2
 
 
 #------------------------------------------------------------------------------------------#
-
+print "Just before the merge loop, list of Edges has length: ", len(morphology.Edges)   #audrey  2014_09_18  re possible index repeats
+print "and list of States has length: ", len(morphology.States)                         #audrey  2014_09_18  and printing different item's info for deleted item
  
 print >>FSA_outfile, "Finding common stems across edges."
-HowManyTimesToCollapseEdges = 9     # 0   TO SKIP THIS SECTION (TO ISOLATE PROBLEMS)
+HowManyTimesToCollapseEdges = 9    #9     # 0   TO SKIP THIS SECTION (TO ISOLATE PROBLEMS)
 for loop in range(HowManyTimesToCollapseEdges): 
  	print "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	print  "Loop number", loop
@@ -421,16 +422,15 @@ while True:
 			stateidx = int(stateidx)	
 			for state in morphology.States:      
 				if state.index == stateidx:  
+					for edge in state.getOutgoingEdges():
+						print "   Outgoing edge index", edge.index, ":", edge.fromState.index, "->", edge.toState.index 
+						i = 0
+						for morph in edge.labels:
+							print "%12s" % morph,
+							i+=1
+							if i%6 == 0: print
+							elif i==len(edge.labels): print
 					break	
-			#####state = morphology.States[stateidx]   
-			for edge in state.getOutgoingEdges():
-				print "   Outgoing edge index", edge.index, ":", edge.fromState.index, "->", edge.toState.index 
-				i = 0
-				for morph in edge.labels:
-					print "%12s" % morph,
-					i+=1
-					if i%6 == 0: print
-					elif i==len(edge.labels): print
 			print "\n\n"		
 			continue
 		
@@ -462,15 +462,14 @@ while True:
 			edgeidx = int(edgeidx)
 			for edge in morphology.Edges:
 				if edge.index == edgeidx:
+					print "   From state", edge.fromState.index, "To state", edge.toState.index
+					i=0
+					for morph in sorted(edge.labels):      # audrey  2014_09_16  Alphabetize so one can check for a specific word
+						print "%12s" % morph,
+						i+=1
+						if i%6 == 0: print
+						elif i==len(edge.labels): print				
 					break
-			#print "From state", morphology.Edges[edgeidx].fromState.index, "To state", morphology.Edges[edgeidx].toState.index
-			print "   From state", edge.fromState.index, "To state", edge.toState.index
-			i=0
-			for morph in edge.labels:
-				print "%12s" % morph,
-				i+=1
-				if i%6 == 0: print
-				elif i==len(edge.labels): print				
 			print "\n\n"
 			continue
 		
