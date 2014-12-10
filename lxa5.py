@@ -336,7 +336,7 @@ print "Just before the merge loop, list of Edges has length: ", len(morphology.E
 print "and list of States has length: ", len(morphology.States)                         #audrey  2014_09_18  and printing different item's info for deleted item
  
 print >>FSA_outfile, "Finding common stems across edges."
-HowManyTimesToCollapseEdges = 9    #9     # 0   TO SKIP THIS SECTION (TO ISOLATE PROBLEMS)
+HowManyTimesToCollapseEdges = 10  #9     # 0   TO SKIP THIS SECTION (TO ISOLATE PROBLEMS)
 for loop in range(HowManyTimesToCollapseEdges): 
  	print "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	print  "Loop number", loop
@@ -352,6 +352,7 @@ for loop in range(HowManyTimesToCollapseEdges):
 	state3 = edge1.toState
 	state4 = edge2.toState
 	print "\n\nWe are considering merging edge ", edge1.index,"(", edge1.fromState.index, "->", edge1.toState.index, ") and  edge", edge2.index, "(", edge2.fromState.index, "->", edge2.toState.index , ")"
+	print "with",  len(EdgeToEdgeCommonMorphs[(edge1, edge2)]), "in common."
 	 
 	print "Printed graph", str(loop), "before_merger"
 	graph = morphology.createDoublePySubgraph(state1,state2) 	
@@ -360,38 +361,38 @@ for loop in range(HowManyTimesToCollapseEdges):
 	graph.draw(filename) 
 
 	if state1 == state2:
-		print "The from-States are identical"
+		print "A: The from-States are identical **********"
 		state_changed_1 = state1
 		state_changed_2 = state2
 		morphology.mergeTwoStatesCommonMother(state3,state4)
 		morphology.EdgePairsToIgnore.append((edge1, edge2))
 
 	elif state3 == state4:
-		print "The to-States are identical"
+		print "B: The to-States are identical **********"
 		state_changed_1 = state3
 		state_changed_2 = state4	 
 		morphology.mergeTwoStatesCommonDaughter(state1,state2) 
 		morphology.EdgePairsToIgnore.append((edge1, edge2))
 
 	elif morphology.mergeTwoStatesCommonMother(state1,state2):
-		print "Now we have merged two sister edges from line 374 **********"
+		print "C: Now we have merged two sister edges from line 374 **********"
 		state_changed_1 = state1
 		state_changed_2 = state2
 		morphology.EdgePairsToIgnore.append((edge1, edge2))
 
 	
 	elif   morphology.mergeTwoStatesCommonDaughter((state3,state4))  : 
-		print "Now we have merged two daughter edges from line 377 **********"
+		print "D: Now we have merged two daughter edges from line 377 **********"
 		state_changed_1 = state3
 		state_changed_2 = state4
 		morphology.EdgePairsToIgnore.append((edge1, edge2))
 		 
 	graph = morphology.createPySubgraph(state1) 	
 	graph.layout(prog='dot')
-	filename = infolder + str(loop) +  '_after_merger_' + str(state_changed_1.index) +  "-" + str(state_changed_2.index) + '.png'
+	filename = outfolder + out_short_filename + str(loop) +  '_after_merger_' + str(state_changed_1.index) +  "-" + str(state_changed_2.index) + '.png'
 	print "Printed graph", str(loop), "after_merger"
-	graph.draw(outfile_FSA_graphics_name) 
- 
+	graph.draw(filename)     # corrected filename   audrey 2014_12_01
+
 
 #------------------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------------------#

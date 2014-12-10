@@ -1153,26 +1153,34 @@ class FSA_lxa:
 	def findCommonStems(self):
 		ThisPairIsBadFlag = False
 		print "Finding common stems"		 
-		EdgeToEdgeCommonMorphs = dict()		 
-		for edgeno  in range(len(self.Edges)): 
-			ThisPairIsBadFlag == False
+		EdgeToEdgeCommonMorphs = dict()	
+		
+		self.Edges = sorted(self.Edges, key=lambda edge: edge.index)		#audrey  2014_12_02
+		
+		
+		for edgeno  in range(len(self.Edges)):
+			#ThisPairIsBadFlag == False   # OOPS should be '=', not '=='
+			ThisPairIsBadFlag = False   #audrey 2014_12_06
 			edge1 = self.Edges[edgeno]
+			
 			for edgeno2 in range(edgeno + 1, len(self.Edges)):
 				edge2 = self.Edges[edgeno2]
-				ThisPairIsBadFlag == False
+
+				#ThisPairIsBadFlag == False   # OOPS should be '=', not '=='
+				ThisPairIsBadFlag = False   #audrey 2014_12_06
 				for pair in self.EdgePairsToIgnore:
 					if pair == (edge1, edge2) or pair == (edge2, edge1):
 						print "\tA: found pair that should not be reconsidered", edge1.index, edge2.index
 						ThisPairIsBadFlag = True
-						continue
+						break   # was  continue   #audrey 2014_12_06  
 				if ThisPairIsBadFlag == False:
 					for morph in edge1.labels:
-						if morph in edge2.labels:		 
+						if morph in edge2.labels:
 							if (edge1,edge2) not in EdgeToEdgeCommonMorphs:							
 								EdgeToEdgeCommonMorphs[ (edge1,edge2) ] = list()						 	
-							EdgeToEdgeCommonMorphs[ (edge1,edge2) ].append(morph)
+							EdgeToEdgeCommonMorphs[ (edge1,edge2) ].append(morph)	
 		for (edge1,edge2) in EdgeToEdgeCommonMorphs.keys():
-			if len(EdgeToEdgeCommonMorphs [ (edge1,edge2) ] ) < 5:				
+			if len(EdgeToEdgeCommonMorphs [ (edge1,edge2) ] ) < 5:     #4:     #was 5:  audrey   2014_11_30				
 				del EdgeToEdgeCommonMorphs[ (edge1,edge2) ]
 
 
@@ -1180,18 +1188,20 @@ class FSA_lxa:
 			print "There are no edge pairs that have been nominated!"
 
 
-
+	
 		# This may be changed. TODO
 		# Only consider edges that share either a mother or a daughter node
 		motherState = None
 		daughterState = None
  		for (edge1,edge2) in EdgeToEdgeCommonMorphs.keys():
+ 			motherState = None		#audrey  2014_12_02
+ 			daughterState = None		#audrey  2014_12_02
 			for edge3 in self.Edges:
 				if edge3.toState == edge1.fromState:
 					for edge4 in self.Edges:
 						if edge4.fromState == edge3.fromState and edge4.toState == edge2.fromState:
 							motherState = edge3.fromState	
-							#print "\t(", edge1.index, edge2.index, ") Found common mother state", motherState.index				
+							print "\t(", edge1.index, edge2.index, ") Found common mother state", motherState.index				
 #			if motherState != None:  #  should be ==? audrey  2014_09_02
 			if motherState == None:
 				for edge3 in self.Edges:	
@@ -1205,8 +1215,13 @@ class FSA_lxa:
 				del EdgeToEdgeCommonMorphs[ (edge1,edge2) ]
 			
 
+			
+
  		commonEdgePairs =  EdgeToEdgeCommonMorphs.keys()
 		commonEdgePairs.sort(key = lambda x: len(EdgeToEdgeCommonMorphs[x]), reverse = True )
+		
+		for (edge1, edge2) in commonEdgePairs:
+			print "\t\t", edge1.index, edge2.index, "\thow many common morphs:", len(EdgeToEdgeCommonMorphs[(edge1, edge2)])
 
 	 
 
