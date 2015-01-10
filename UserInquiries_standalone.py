@@ -46,25 +46,6 @@ while True:
 			print "\n\n"		
 			continue
 		
-		while False:
-			stateidx = raw_input("State index:")
-			if stateidx == "" or stateidx == "exit":
-				break
-			stateidx = int(stateidx)	
-			for state in morphology.States:      
-				if state.index == stateidx:  
-					break	
-			#####state = morphology.States[stateidx]  
-			for edge in state.getOutgoingEdges():
-				print "   Outgoing edge index", edge.index, ":", edge.fromState.index, "->", edge.toState.index 
-				i = 0
-				for morph in edge.labels:
-					print "%12s" % morph,
-					i+=1
-					if i%6 == 0: print
-					elif i==len(edge.labels): print
-			print "\n\n"		
-			continue
 		
 		if False:     # THIS SECTION REPLACED BY ABOVE  audrey  2014_09_07    state.index (not stateno) matches the graph
 			stateno = raw_input("State number:")

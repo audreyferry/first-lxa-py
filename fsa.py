@@ -290,7 +290,7 @@ class FSA_lxa:
 		if splitEndState == True:
 			self.splitEndState = True
 		else:
-			self.splitEndState = False		 
+			self.splitEndState = False	
 		#self.historyOfChanges = list() # a history of changes made to the FSA by the learner
 		self.wordParseDict 	= dict()		# the key is the word; the value is a list of parses of the word, where a parse is a list of edges.		 
 		self.EdgePairsToIgnore = list()
@@ -1221,9 +1221,7 @@ class FSA_lxa:
 		commonEdgePairs.sort(key = lambda x: len(EdgeToEdgeCommonMorphs[x]), reverse = True )
 		
 		for (edge1, edge2) in commonEdgePairs:
-			print "\t\t", edge1.index, edge2.index, "\thow many common morphs:", len(EdgeToEdgeCommonMorphs[(edge1, edge2)])
-
-	 
+			print "\t\t", edge1.index, edge2.index, "\thow many common morphs:", len(EdgeToEdgeCommonMorphs[(edge1, edge2)])	 
 
 
 		return (commonEdgePairs,  EdgeToEdgeCommonMorphs)
