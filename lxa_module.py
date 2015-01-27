@@ -989,7 +989,7 @@ def printSignatures(Signatures, WordToSig, StemCounts, outfile, encoding, FindSu
 		print >>outfile
 
 
-
+	# Print signatures (not their stems) , sorted by number of stems
 
 	print >> outfile, "\n=======  SOURCE  function: printSignatures   location:(ii)   file: lxa_module.py   ======="
 	print >>outfile,  "--------------------------------------------------------------"
@@ -1103,7 +1103,8 @@ def printSignatures(Signatures, WordToSig, StemCounts, outfile, encoding, FindSu
 	
 	#  print WORDS of each signature:
 	if True:
-		words = WordToSig.keys()
+		words = WordToSig.keys()    # NOTE THAT THESE ARE SIGNATURES AND WORDS AS ORIGINALLY CREATED,
+		                            # NOT AS COULD BE DERIVED FROM FSA     audrey  2015_01_10
 		words.sort()
 		print >>outfile, "***" 
 		print >> outfile, "\n=======  SOURCE  function: printSignatures   location:(v)   file: lxa_module.py   ======="
@@ -1180,16 +1181,21 @@ def printWordsToSigTransforms(Signatures, WordToSig, StemCounts, outfile, encodi
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 def getrobustness(sig, stems):
 #----------------------------------------------------------------------------------------------------------------------------#
-	countofsig = len(sig)
+	#countofsig = len(sig)         # CAREFUL --- Need to split sig  audrey  2015_01_26
+	affixlist = sig.split('-')
+	countofaffixes = len(affixlist)
 	countofstems = len(stems)
 	lettersinstems = 0
 	lettersinaffixes = 0
 	for stem in stems:
 		lettersinstems += len(stem)
-	for affix in sig:
-		lettersinaffixes += len(affix)
+	for affix in affixlist:
+		if affix != 'NULL':
+			lettersinaffixes += len(affix)
+			
 #----------------------------------------------------------------------------------------------------------------------------#
-	return lettersinstems * (countofsig-1) + lettersinaffixes * (countofstems-1)
+	#return lettersinstems * (countofaffixes-1) + lettersinaffixes * (countofstems-1)
+	return  lettersinstems *  countofaffixes    + lettersinaffixes *  countofstems
 #----------------------------------------------------------------------------------------------------------------------------#
 
 
@@ -1402,7 +1408,7 @@ def find_N_highest_weight_affix (wordlist, FindSuffixesFlag):
 
  
 #----------------------------------------------------------------------------------------------------------------------------#
-def MakeBiSignatures( wordlist, SigToTuple, FindSuffixesFlag): #This function finds pairs of words which make a valid signature, and makes Dictionary whose key is the signature and whose value is a tuple: stem, word1, word2, signature.
+def MakeBiSignatures( wordlist, SigToTuple, FindSuffixesFlag): #This function finds pairs of words which make a valid signature, and makes Dictionary whose key is the signature and whose value is a tuple: stem, word1, word2, signature. #actually list of such 4-tuples
 #----------------------------------------------------------------------------------------------------------------------------#
 	bisig			= []		# signature with exactly two affixes
 	numberofwords 		= len(wordlist)
@@ -1571,6 +1577,7 @@ def MakeSignatures_1(StemToWord, StemToSig, FindSuffixesFlag, fsa,outfile,  NoLe
 	Signatures={}
 	StemToSig={}
 	StemCountThreshold = 10
+	
 	for stem in StemToWord.keys():
 		nullflag = False
 		#print "\n MakeSignatures", stem
@@ -1583,6 +1590,7 @@ def MakeSignatures_1(StemToWord, StemToSig, FindSuffixesFlag, fsa,outfile,  NoLe
 			else:
 				affixlength = len(word) - stemlength
 				if NoLengthLimitFlag == False and affixlength > MaximumAffixLength:
+				        # Note that, by construction of StemToWord, every affix checked here is short enough   # audrey   2015_01_10
 					continue
 				if FindSuffixesFlag:
 					affix = word[stemlength:]
