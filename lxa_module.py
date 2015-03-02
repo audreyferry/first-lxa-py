@@ -97,8 +97,8 @@ def findSignatureInformationContent (signatures, signature, bitsPerLetter):
 		stemlength = len(stem)
 		#print "stem: ", stem
 		#print "stemlength: ", stemlength
-		stemSetPhonoInformation += bitsPerLetter * stemlength
-		#print "stemSetPhonoInformation ", stemSetPhonoInformation
+		stemSetPhonoInformation += bitsPerLetter * stemlength                        # Feb. 15, 2015: factorial, not addition!
+		#print "stemSetPhonoInformation ", stemSetPhonoInformation                   # See coursenotes(6), section 5.4.1
 		stemSetOrderingInformation += math.log( stemlength * (stemlength -1)/ 2,2)   # audrey - questions re calculation
 		#print "stemSetOrderingInformation: ", stemSetOrderingInformation
 #	affixList = signature.split(".")
@@ -111,7 +111,7 @@ def findSignatureInformationContent (signatures, signature, bitsPerLetter):
 		#print "affixPhonoInformation: ", affixPhonoInformation
 		if affixlength > 1:
 			affixOrderingInformation += math.log ( affixlength * (affixlength -1)/2,2) # audrey - questions re calculation
-		else:
+		else:										   # see note above
 			affixOrderingInformation = 0
 		#print "affixOrderingInformation: ", affixOrderingInformation
 	phonoInformation = int(stemSetPhonoInformation + affixPhonoInformation)
@@ -156,7 +156,7 @@ def findWordListInformationContent (wordlist, bitsPerLetter):
 		#print "word: ", word
 		#print "wordlength: ", wordlength
 		phonoInformation += bitsPerLetter * wordlength
-		#print "word_phonoInformation: ", phonoInformation
+		#print "word_phonoInformation: ", phonoInformation          # see note in findSignatureInformationContent
 		orderingInformation += wordlength*(wordlength-1) / 2        # audrey - questions re calculation
 		#print "word_orderingInfomation: ", orderingInformation
 	return (phonoInformation, orderingInformation)
@@ -1194,8 +1194,7 @@ def getrobustness(sig, stems):
 			lettersinaffixes += len(affix)
 			
 #----------------------------------------------------------------------------------------------------------------------------#
-	#return lettersinstems * (countofaffixes-1) + lettersinaffixes * (countofstems-1)
-	return  lettersinstems *  countofaffixes    + lettersinaffixes *  countofstems
+	return lettersinstems * (countofaffixes-1) + lettersinaffixes * (countofstems-1)
 #----------------------------------------------------------------------------------------------------------------------------#
 
 
@@ -1546,8 +1545,8 @@ def MakeSignatures(StemToWord, StemToSig, FindSuffixesFlag, outfile, NoLengthLim
 				#print "\t", affix, 
 
 		affixlist = list(affixset)
-		affixlist.sort()		 
-		thissig="-".join( affixlist )  
+		affixlist.sort()
+		thissig="-".join( affixlist )
 		#if nullflag:
 		#	print thissig		
 		#print >>outfile, thissig,
